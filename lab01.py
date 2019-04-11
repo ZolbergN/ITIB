@@ -58,7 +58,7 @@ def training_mode(f, x, func_activ, func_activ_der):
         errors = sum((f[i] ^ y[i]) for i in range(16))
         sumError.append(errors)
 
-        print('%d y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (k, str(y), w[0], w[1], w[2], w[3], w[4], errors))
+        print('%d y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (k - 1, str(y), w[0], w[1], w[2], w[3], w[4], errors))
         k += 1
 
         if k > 50: return -1
@@ -78,48 +78,50 @@ def training_brute_force(f, x, func_activ, func_activ_der, num_of_vec, flag):
     y = [0]*len(num_of_vec)
     sumError = []
 
-    for vectors in num_of_vec:
-        k = 1
-        while np.sum(errors) != 0:
+    k = 1
+    while np.sum(errors) != 0:
 
-            for i in range(len(num_of_vec)):
-                if func_activ_der == 1:
-                    net_y = net(w, num_of_vec[i])
-                    y[i] = func_activ(net_y)
-                    delta = f[i] - y[i]
+        for i in range(len(num_of_vec)):
+            if func_activ_der == 1:
+                net_y = net(w, num_of_vec[i])
+                y[i] = func_activ(net_y)
+                delta = f[i] - y[i]
 
-                    for j in range(len(w)):
-                        w[j] += eta * delta * num_of_vec[i][j]
-                else:
-                    net_y = net(w, num_of_vec[i])
-                    y[i] = func_activ(net_y)
-                    delta = f[i] - y[i]
+                for j in range(len(w)):
+                    w[j] += eta * delta * num_of_vec[i][j]
+            else:
+                net_y = net(w, num_of_vec[i])
+                y[i] = func_activ(net_y)
+                delta = f[i] - y[i]
 
-                    for j in range(len(w)):
-                        w[j] += eta * delta * num_of_vec[i][j] * func_activ_der(y[i])
+                for j in range(len(w)):
+                    w[j] += eta * delta * num_of_vec[i][j] * func_activ_der(y[i])
 
-            errors = sum((f[i] ^ y[i]) for i in range(len(num_of_vec)))
-            sumError.append(errors)
+        errors = sum((f[i] ^ y[i]) for i in range(len(num_of_vec)))
+        sumError.append(errors)
 
-            if flag:
-                print('%d y=%s, w=[%.2f, s%.2f, %.2f, %.2f, %.2f], Error=%d' % (
-                    k - 1, str(y), w[0], w[1], w[2], w[3], w[4], errors))
+        if flag:
+            print('%d y=%s, w=[%.2f, s%.2f, %.2f, %.2f, %.2f], Error=%d' % (
+                k - 1, str(y), w[0], w[1], w[2], w[3], w[4], errors))
 
-            k += 1
+        k += 1
 
-            if k >= 10: return -1
+        if k >= 10: return -1
 
         if np.sum(errors) == 0:
-            error = test_func_step(f, x, w, func_activ)
+            _, error = test_func_step(f, x, w, func_activ)
 
             if error == 0:
                 if flag:
+                    y, err = test_func_step(f, x, w, func_activ)
+                    print("\n")
+                    print("Тестовая функция: ", y)
+                    print("Error: ", err)
+
                     plt.plot(sumError, 'ro-')
                     plt.grid(True)
                     plt.show()
                 return k - 1
-
-
 
     return 0
 
@@ -128,7 +130,7 @@ def test_func_step(f, x, w, func_activ):
 
     err = sum((f[j] ^ y[j] for j in range(16)))
 
-    return err
+    return y, err
 
 # Функция для предоставления необходимых данных алгоритму обучения
 def step_brute_force_command():
