@@ -32,39 +32,38 @@ def training_mode(f, x, func_activ, func_activ_der):
     n = 4
     w = np.zeros(n+1)
     eta = 0.3
-
-    # Посчитаем реальный выход перед обучением
-    y = [func_activ(net(w, x[i])) for i in range(16)]
-
-    # Посчитаем суммарную ошибку перед обучением
-    err = sum(f[i] ^ y[i] for i in range(16))
-
-    errors = [err]
-
-    print('0 y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (str(y), w[0], w[1], w[2], w[3], w[4], err))
+    y = [0]*16
+    errors = np.ones(len(x))
+    sumError = []
 
     k = 1
-    while err != 0:
-        delta = list(f[i] - y[i] for i in range(16))
+    while np.sum(errors) != 0:
 
-        for j in range(5):
+        for i in range(0, len(x)):
             if func_activ_der == 1:
-                w[j] += sum(eta * delta[i] * x[i][j] for i in range(16))
+                net_y = net(w, x[i])
+                y[i] = func_activ(net_y)
+                delta = f[i] - y[i]
+
+                for j in range(len(w)):
+                    w[j] += eta * delta * x[i][j]
             else:
-                w[j] += sum(eta * delta[i] * x[i][j] * func_activ_der(net(w, x[j])) for i in range(16))
+                net_y = net(w, x[i])
+                y[i] = func_activ(net_y)
+                delta = f[i] - y[i]
 
-        y = [func_activ(net(w, x[i])) for i in range(16)]
+                for j in range(len(w)):
+                    w[j] += eta * delta * x[i][j] * func_activ_der(y[i])
 
-        err = sum(f[i] ^ y[i] for i in range(16))
-        errors.append(err)
+        errors = sum((f[i] ^ y[i]) for i in range(16))
+        sumError.append(errors)
 
-        print('%d y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (k, str(y), w[0], w[1], w[2], w[3], w[4], err))
-
+        print('%d y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (k, str(y), w[0], w[1], w[2], w[3], w[4], errors))
         k += 1
 
-        if k >= 50: return -1
+        if k > 50: return -1
 
-    return k - 1, errors
+    return k - 1, sumError
 
 # Определение позиции набора в таблице истинности
 def position(num_of_vec):
@@ -75,47 +74,61 @@ def training_brute_force(f, x, func_activ, func_activ_der, num_of_vec, flag):
     n = 4
     w = np.zeros(n+1)
     eta = 0.3
+    errors = np.ones(len(num_of_vec))
+    y = [0]*len(num_of_vec)
+    sumError = []
 
-    # Посчитаем реальный выход перед обучением
+    for vectors in num_of_vec:
+        k = 1
+        while np.sum(errors) != 0:
+
+            for i in range(len(num_of_vec)):
+                if func_activ_der == 1:
+                    net_y = net(w, num_of_vec[i])
+                    y[i] = func_activ(net_y)
+                    delta = f[i] - y[i]
+
+                    for j in range(len(w)):
+                        w[j] += eta * delta * num_of_vec[i][j]
+                else:
+                    net_y = net(w, num_of_vec[i])
+                    y[i] = func_activ(net_y)
+                    delta = f[i] - y[i]
+
+                    for j in range(len(w)):
+                        w[j] += eta * delta * num_of_vec[i][j] * func_activ_der(y[i])
+
+            errors = sum((f[i] ^ y[i]) for i in range(len(num_of_vec)))
+            sumError.append(errors)
+
+            if flag:
+                print('%d y=%s, w=[%.2f, s%.2f, %.2f, %.2f, %.2f], Error=%d' % (
+                    k - 1, str(y), w[0], w[1], w[2], w[3], w[4], errors))
+
+            k += 1
+
+            if k >= 10: return -1
+
+        if np.sum(errors) == 0:
+            error = test_func_step(f, x, w, func_activ)
+
+            if error == 0:
+                if flag:
+                    plt.plot(sumError, 'ro-')
+                    plt.grid(True)
+                    plt.show()
+                return k - 1
+
+
+
+    return 0
+
+def test_func_step(f, x, w, func_activ):
     y = [func_activ(net(w, x[i])) for i in range(16)]
 
-    # Посчитаем суммарную ошибку перед обучением
-    err = sum(f[i] ^ y[i] for i in range(16))
+    err = sum((f[j] ^ y[j] for j in range(16)))
 
-    errors = [err]
-
-    if flag:
-        print('0 y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (str(y), w[0], w[1], w[2], w[3], w[4], err))
-
-    k = 1
-    while err != 0:
-        delta = list((f[i] - y[i] for i in range(16)))
-
-        for j in range(5):
-            if func_activ_der == 1:
-                w[j] += sum(eta * delta[position(num_of_vec[i])] * num_of_vec[i][j] for i in range(len(num_of_vec)))
-            else:
-                w[j] += sum(eta * delta[position(num_of_vec[i])] * num_of_vec[i][j] * func_activ_der(net(w, num_of_vec[i]))
-                            for i in range(len(num_of_vec)))
-
-        y = [func_activ(net(w, x[i])) for i in range(16)]
-
-        err = sum((f[i] ^ y[i] for i in range(16)))
-        errors.append(err)
-
-        if flag:
-            print('%d y=%s, w=[%.2f, %.2f, %.2f, %.2f, %.2f], Error=%d' % (k, str(y), w[0], w[1], w[2], w[3], w[4], err))
-
-        k += 1
-
-        if k >= 10: return -1
-
-    if flag:
-        plt.plot(errors)
-        plt.grid(True)
-        plt.show()
-
-    return k - 1
+    return err
 
 # Функция для предоставления необходимых данных алгоритму обучения
 def step_brute_force_command():
@@ -123,7 +136,7 @@ def step_brute_force_command():
     der_act_func = 1
 
     # Перебираем всевозможное количество векторов, которые будут использоваться в обучении
-    for i in range(1, 16):
+    for i in range(2, 16):
         all_combinations = list(combinations(x, i))
 
         print('Перебор из %d векторов...' % i)
@@ -141,20 +154,21 @@ def step_brute_force_command():
                 print('\nОбучилась за %d эпох' % k)
 
                 break
-        if flag == 1: break
 
+        if flag == 1: break
 # Функция для предоставления необходимых данных алгоритму обучения
 def sigmoid_brute_force_command():
     act_func = sigmoid
     der_act_func = der_sigmoid
 
     # Перебираем всевозможное количество векторов, которые будут использоваться в обучении
-    for i in range(1, 16):
+    for i in range(2, 16):
         all_combinations = list(combinations(x, i))
 
         print('Перебор из %d векторов...' % i)
 
         for num_of_vec in all_combinations:
+            # Используем флаг для того, чтобы понять, что на НС обучилась
             flag = 0
             count = training_brute_force(f, x, act_func, der_act_func, num_of_vec, flag)
 
@@ -163,10 +177,10 @@ def sigmoid_brute_force_command():
 
                 flag = 1
                 k = training_brute_force(f, x, act_func, der_act_func, num_of_vec, flag)
-
                 print('\nОбучилась за %d эпох' % k)
 
                 break
+
         if flag == 1: break
 
 # Функция для предоставления необходимых данных алгоритму обучения и построение графика
@@ -174,7 +188,7 @@ def step_command():
     k, errors = training_mode(func_init(initialize()), initialize(), step, 1)
     print('\nОбучилась за %d эпох' % k)
 
-    plt.plot(errors)
+    plt.plot(errors, 'bo-')
     plt.grid(True)
     plt.show()
 
@@ -184,7 +198,7 @@ def sigmoid_command():
     k, errors = training_mode(func_init(initialize()), initialize(), sigmoid, der_sigmoid)
     print('\nОбучилась за %d эпох' % k)
 
-    plt.plot(errors)
+    plt.plot(errors, 'bo-')
     plt.grid(True)
     plt.show()
 
