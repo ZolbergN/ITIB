@@ -1,80 +1,175 @@
-import math
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 
-N = 20
+class Neuron(object):
+    _plotX = []  # Список для координат по X
+    _plotY = []  # Список для координат по Y
 
-def initialize(xlist):
-    ylist = [math.sin(x - 1) for x in xlist]
+    _M = 1000
 
-    return ylist
+    _learnFunction = [] # Список для обучающейся функции
+    _mainFunction = []  # Список для функции по условию
 
-def Net(x, w):
-    return sum([w_i * x_i for w_i, x_i in zip(w, x)])
+    _N = 20
+    _a = -2
+    _b = 2
 
-def training_mode(xlist, p, eta, T):
-    M = 30
-    xx = [0]*20
-    w = [0 for i in range(p)]
+    _windowSize = 4
+    _w = np.zeros(_windowSize + 1)
 
-    for q in range(p):
-        xx[q] = xlist[q]
+    _epsilon = 1
+    _eta = 0.3
+    _delta = 0
+    _k = 0
 
-    era = 0
+    _era = []
+    _error = []
+    # Считаем net
+    def net(self, windowSize, x, w):
+        net = (sum(w[i + 1] * x[i] for i in range(windowSize)))
 
-    while(era < M):
+        return net
 
-        for l in range(p, N):
-            xx[l] = Net(xlist[l - p:l-1], w)
-            err = xlist[l] - xx[l]
-            for k in range(p):
-                w[k] += eta * err * xlist[l - p + k]
-            print("w = ", w)
-            print(err)
+    # Получаем интервал с шагом
+    def getX(self, a, b):
+        vectorX = []
 
-        era += 1
+        dx = (b - a) / self._N
 
-        E = sum((math.sqrt((xlist[i] - xx[i]) ** 2) for i in range(N)))
+        for i in range(self._N):
+            vectorX.append(a + i * dx)
 
-        print('E: ', E)
+        return vectorX
 
-        print("era = ", era)
-        print("xx = ", xx)
+    # Получаем значения функции на интервале
+    def getY(self, a, b):
+        vectorY = []
+        vectorX = self.getX(a, b)
 
-    plot_func(xlist, xx, T)
+        for i in range(self._N):
+            vectorY.append(math.sin(vectorX[i] - 1))
 
-    return xx
+        return vectorY
 
-def plot_func(xlist, xx, TT):
-    fig, ax1 = plt.subplots()
-    ax1.plot(TT, xlist, 'ro-')
-    ax1.plot(TT, xx, 'bo-')
+    # Алгоритм обучения
+    def training_mode(self):
+        self._learnFunction = [0]*20
+        self._mainFunction = self.getY(self._a, self._b)
 
-    plt.xlabel("T")
-    plt.ylabel("X")
+        self._w = np.zeros(self._windowSize + 1)
 
-    print('x: ',xx)
-    print('xlist: [', xlist)
+        while self._k < self._M:
+            for q in range(self._windowSize):
+                self._learnFunction[q] = self._mainFunction[q]
 
-    plt.grid(True)
-    plt.show()
+            for i in range(self._windowSize, self._N):
+                self._learnFunction[i] = self.net(self._windowSize, self._mainFunction[i - self._windowSize: i], self._w)
+                self._delta = self._mainFunction[i] - self._learnFunction[i]
+
+                for j in range(self._windowSize):
+                    self._w[j + 1] += self._eta * self._delta * self._mainFunction[i-self._windowSize + j]
+
+            self._epsilon = sum((self._mainFunction[index] - self._learnFunction[index]) ** 2 for index in range(self._N))
+            self._epsilon = math.sqrt(self._epsilon)
+
+            self._era.append(self._k)
+            self._error.append(self._epsilon)
+
+            self._k += 1
+
+    def assingment(self, command):
+        self._epsilon = 1
+        self._mainFunction = self.getY(self._a, self._b)
+
+        if command == 'eta':
+            self.training_mode()
+            self._plotY.append(self._epsilon)
+            self._plotX.append(self._eta)
+        elif command == 'p':
+            self.training_mode()
+            self._plotY.append(self._epsilon)
+            self._plotX.append(self._windowSize)
+        elif command == 'era':
+            self.training_mode()
+            self._plotY.append(self._error)
+            self._plotX.append(self._era)
+
+        print("Веса: ", np.round(self._w, 4))
+        print('ERROR: ', self._epsilon)
+
+obj = Neuron()
 
 if __name__ == '__main__':
-    p = 4
-    N = 20
-    a = -2
-    b = 2
-    dx = 0.2
-    net = 0.0
-    eta = 0.5
+    commands = 'Введите команду:' \
+               '\n     eta      --- зависимость средней квадратичной ошибки от нормы обучения' \
+               '\n     p        --- зависимость средней квадратичной ошибки от размера окна' \
+               '\n     era      --- зависимость средней квадратичной ошибки от количества эпох' \
+               '\n' \
+               '\n     exit     --- выход из программы'
 
-    a_learn = b
-    b_learn = 2*b - a
+    print(commands)
 
-    T = np.arange(a, b, dx)
+    while True:
+        command = input()
 
-    xlist = initialize(T)
+        if command == 'eta':
+            obj._plotX = []
+            obj._plotY = []
+            obj._windowSize = 4
+            for i in range(1, 10):
+                obj._eta = float(i / 10)
+                print("Норма обучения: ", obj._eta)
+                obj._k = 0
+                obj._M = 1000
+                obj.assingment(command)
 
-    print('\n')
+                print("Обучилась за %d эпох" % obj._k)
+                print("\n")
 
-    training_mode(xlist,  p, eta, T)
+            plt.plot(obj._plotX, obj._plotY, 'ro-')
+            plt.grid(True)
+            plt.show()
+
+        elif command == 'p':
+            obj._plotX = []
+            obj._plotY = []
+            obj._eta = 0.3
+
+            for i in range(2, 12):
+                obj._windowSize = i
+                print("Размер окна: ", obj._windowSize)
+                obj._k = 0
+                obj._M = 1000
+                obj.assingment(command)
+
+                print("Обучилась за %d эпох" % obj._k)
+                print("\n")
+
+            plt.plot(obj._plotX, obj._plotY, 'ro-')
+            plt.grid(True)
+            plt.show()
+
+        elif command == 'era':
+            obj._plotX = []
+            obj._plotY = []
+
+            obj._eta = 0.3
+            obj._windowSize = 4
+            obj._M = 25
+
+            obj.assingment(command)
+
+            print("Размер окна: ", obj._windowSize)
+            print("Норма обучения: ", obj._eta)
+            print("Обучилась за %d эпох" % obj._M)
+
+            plt.plot(obj._plotX, obj._plotY, 'ro-')
+            plt.grid(True)
+            plt.show()
+
+        elif command == 'exit':
+            break
+
+        else:
+            print("Введена не корректная команда")
