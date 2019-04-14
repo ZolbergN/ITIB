@@ -92,19 +92,20 @@ class Neuron(object):
             self._plotX.append(self._windowSize)
         elif command == 'era':
             self.training_mode()
-            self._plotY.append(self._error)
-            self._plotX.append(self._era)
+            plt.plot(obj._era, obj._error, 'bo-')
+            plt.grid(True)
+            plt.show()
 
         print("Веса: ", np.round(self._w, 4))
-        print('ERROR: ', self._epsilon)
+        print('Среднеквадратичная ошибка: ', self._epsilon)
 
 obj = Neuron()
 
 if __name__ == '__main__':
     commands = 'Введите команду:' \
-               '\n     eta      --- зависимость средней квадратичной ошибки от нормы обучения' \
-               '\n     p        --- зависимость средней квадратичной ошибки от размера окна' \
-               '\n     era      --- зависимость средней квадратичной ошибки от количества эпох' \
+               '\n     eta      --- зависимость среднеквадратичной ошибки от нормы обучения' \
+               '\n     p        --- зависимость среднеквадратичной ошибки от размера окна' \
+               '\n     era      --- зависимость среднеквадратичной ошибки от количества эпох' \
                '\n' \
                '\n     exit     --- выход из программы'
 
@@ -153,20 +154,19 @@ if __name__ == '__main__':
         elif command == 'era':
             obj._plotX = []
             obj._plotY = []
+            obj._era = []
+            obj._error = []
 
             obj._eta = 0.3
             obj._windowSize = 4
             obj._M = 25
+            obj._k = 0
 
             obj.assingment(command)
 
             print("Размер окна: ", obj._windowSize)
             print("Норма обучения: ", obj._eta)
             print("Обучилась за %d эпох" % obj._M)
-
-            plt.plot(obj._plotX, obj._plotY, 'ro-')
-            plt.grid(True)
-            plt.show()
 
         elif command == 'exit':
             break
