@@ -99,13 +99,42 @@ class Neuron(object):
         print("Веса: ", np.round(self._w, 4))
         print('Среднеквадратичная ошибка: ', self._epsilon)
 
+    # Функция для прогнозирования
+    def test_func(self, a, b):
+        vectorX = self.getX(b, 2 * b - a)
+        vectorY = self.getY(b, 2 * b - a)
+
+        testFunction = [0]*24
+        TF = [0]*20
+
+        for i in range(self._N - self._windowSize, self._N):
+            testFunction[i - (self._N - self._windowSize)] = self._learnFunction[i]
+
+        for j in range(self._windowSize, len(vectorY) + self._windowSize):
+            vectorTestFunction = [0]*self._windowSize
+            for k in range(self._windowSize):
+                vectorTestFunction[k] = testFunction[k + j - self._windowSize]
+            testFunction[j] = self.net(self._windowSize, vectorTestFunction, self._w)
+
+        for i in range(self._windowSize, len(testFunction)):
+            TF[i - self._windowSize] = testFunction[i]
+        
+        plt.plot(vectorX, vectorY, 'bo-')
+        plt.plot(vectorX, TF, 'ro')
+
+        plt.grid(True)
+        plt.show()
+
 obj = Neuron()
 
 if __name__ == '__main__':
+    obj.training_mode()
+
     commands = 'Введите команду:' \
                '\n     eta      --- зависимость среднеквадратичной ошибки от нормы обучения' \
                '\n     p        --- зависимость среднеквадратичной ошибки от размера окна' \
                '\n     era      --- зависимость среднеквадратичной ошибки от количества эпох' \
+               '\n     test     --- построить функцию прогнозирования' \
                '\n' \
                '\n     exit     --- выход из программы'
 
@@ -167,6 +196,9 @@ if __name__ == '__main__':
             print("Размер окна: ", obj._windowSize)
             print("Норма обучения: ", obj._eta)
             print("Обучилась за %d эпох" % obj._M)
+
+        elif command == 'test':
+            obj.test_func(obj._a, obj._b)
 
         elif command == 'exit':
             break
