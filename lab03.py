@@ -2,10 +2,10 @@ import numpy as np
 import math
 
 def sigmoid(net):
-    return (1 - np.exp(-net))/(1 + np.exp(-net))
+    return (1 - np.exp(-net)) / (1 + np.exp(-net))
 
 def sigmoid_derivative(net):
-    f = (1 - np.exp(-net))/(1 + np.exp(-net))
+    f = (1 - np.exp(-net)) / (1 + np.exp(-net))
 
     return 0.5 * (1 - f ** 2)
 
@@ -45,22 +45,18 @@ class Neuron(object):
                     self._net_output[m] += self._w[m + 1][i + 1] * self._Xj[i + 1]
                 self._Y[m] = sigmoid(self._net_output[m])
 
-                self._delta2[m] = sigmoid_derivative(self._net_output[m]) * \
-                                          (self._t - self._Y[m])
-                self._epsilon = math.sqrt(sum([(self._t - self._Y[index])
-                                               ** 2 for index in range(self._M)]))
+                self._delta2[m] = sigmoid_derivative(self._net_output[m]) * (self._t - self._Y[m])
+                self._epsilon = math.sqrt(sum([(self._t - self._Y[index]) ** 2 for index in range(self._M)]))
 
                 for i in range(self._J):
-                    self._delta1[i] = sigmoid_derivative(self._net_hidden[i]) * \
-                                              self._w[1][m + 1] * self._delta2[m]
+                    self._delta1[i] = sigmoid_derivative(self._net_hidden[i]) * self._w[1][m + 1] * self._delta2[m]
 
                 for j in range(self._J + self._M):
                     self._w[1][j] += self._etta * self._delta2[m] * self._Xj[j]
 
             for j in range(self._J):
                 self._w[0][j] += self._etta * self._delta1[j] * self._X[self._N - 1]
-                self._w[0][j + 2] += self._etta * \
-                                    self._delta1[j] * self._X[self._N]
+                self._w[0][j + 2] += self._etta * self._delta1[j] * self._X[self._N]
 
             print("Комбинированный вход скрытого слоя: ", np.round(self._net_hidden, 4))
             print("Выходной сигнал скрытого слоя: ", np.round(self._Xj, 4))
@@ -69,12 +65,13 @@ class Neuron(object):
             print("Ошибка выходного слоя: ", self._delta2)
             print("Ошибка скрытого слоя: ", self._delta1)
             print("\n")
-            # self._w = [np.round(v, 3) for v in self._w]
-            print("Скорректорованные веса: ", [np.round(v, 4) for v in self._w])
+            print("Скорректированыые веса:", end='')
+            for i in self._w:
+                print(np.around(i, 4), end='')
+            print('')
 
             print("-----------------------------------------------")
-            print("Номер эпохи k: %d; Суммарная ошибка E(k): %.6f" % (
-                self._era, self._epsilon))
+            print("Номер эпохи k: %d; Суммарная ошибка E(k): %.6f" % (self._era, self._epsilon))
             print("Выходной вектор y: ", np.round(self._Y, 4))
             print("-----------------------------------------------")
 
