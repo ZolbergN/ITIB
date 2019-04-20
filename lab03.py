@@ -30,34 +30,42 @@ class Neuron(object):
     _delta1 = [0.0]*(_J)
     _delta2 = [0.0]*(_M)
 
+    # Алгоритм обучения
     def alghoritm(self):
         while(self._epsilon > 0.0001):
             print("ЭПОХА №", self._era)
 
             self._Xj[0] = 1.0
+            # Считаем net скрытого слоя и выходные сигналы скрытого слоя
             for j in range(self._J):
                 self._net_hidden[j] = self._w[0][j] * self._X[0] + self._w[0][j + 2] * self._X[1]
                 self._Xj[j + 1] = sigmoid(self._net_hidden[j])
 
+            # Считаем net выходного слоя и выходные сигналы выходного слоя
             for m in range(self._M):
                 self._net_output[m] = self._w[m + 1][m] * self._Xj[m]
                 for i in range(self._J):
                     self._net_output[m] += self._w[m + 1][i + 1] * self._Xj[i + 1]
                 self._Y[m] = sigmoid(self._net_output[m])
 
+                # Считаем ошибку на выходе
                 self._delta2[m] = sigmoid_derivative(self._net_output[m]) * (self._t - self._Y[m])
+                # Считаем суммарную среднеквадратичную ошибку
                 self._epsilon = math.sqrt(sum([(self._t - self._Y[index]) ** 2 for index in range(self._M)]))
 
+                # Считаем ошибку на скрытом слое
                 for i in range(self._J):
                     self._delta1[i] = sigmoid_derivative(self._net_hidden[i]) * self._w[1][m + 1] * self._delta2[m]
 
+                # Корректируем веса, начиная с выходного слоя
                 for j in range(self._J + self._M):
                     self._w[1][j] += self._etta * self._delta2[m] * self._Xj[j]
 
+            # Корректируем веса скрытого слоя
             for j in range(self._J):
                 self._w[0][j] += self._etta * self._delta1[j] * self._X[self._N - 1]
                 self._w[0][j + 2] += self._etta * self._delta1[j] * self._X[self._N]
-
+            
             print("Комбинированный вход скрытого слоя: ", np.round(self._net_hidden, 4))
             print("Выходной сигнал скрытого слоя: ", np.round(self._Xj, 4))
             print("Комбинированный вход выходного слоя: ", np.round(self._net_output, 4))
