@@ -31,8 +31,7 @@ def training_mode(num_of_vec):
     out = ''
 
     while np.sum(errors) != 0:
-        out += (f"---------Эпоха №{era}---------\nw:{u}, ")
-
+        
         for x in range(len(num_of_vec)):
             fi_y = fi(num_of_vec[x], c)
             net_y = net(fi_y, u)
@@ -45,7 +44,7 @@ def training_mode(num_of_vec):
 
         errors = sum((f[i] ^ y[i]) for i in range(len(num_of_vec)))
         sumError.append(errors)
-        out += (f"y:{y}, Целевой вектор f:{f}, Error = %.d \n" % (errors))
+        out += (f"%d y:{y}, Целевой вектор f:{f}, w:{u} Error = %.d \n" % (era, errors))
 
         era += 1
 
