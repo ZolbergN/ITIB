@@ -9,13 +9,16 @@ def step(net):
     else:
         return 0
 
+# Считаем net
 def net(fi, u):
     return sum(fi[i] * u[i] for i in range(len(u)))
 
+# Вычисляем значение fi
 def fi(x, c):
     fi_y = [[np.array(x) - np.array(cc)] for cc in c]
     return [1] + [math.exp(-np.sum(np.power(i, 2))) for i in fi_y]
 
+# Алгоритм обучения
 def training_mode(num_of_vec):
     # Запишем центры наших РБФ-нейронов
     c = [[0, 0, 0, 0], [0, 1, 0, 0], [1, 0, 0, 0]]
@@ -31,7 +34,7 @@ def training_mode(num_of_vec):
     out = ''
 
     while np.sum(errors) != 0:
-        
+
         for x in range(len(num_of_vec)):
             fi_y = fi(num_of_vec[x], c)
             net_y = net(fi_y, u)
@@ -50,6 +53,7 @@ def training_mode(num_of_vec):
 
         if era >= 50: return -1
 
+    # Проверяем: совпадает ли тестовая функция с целевой
     if test_function(c, u) == initialize():
         print(f"Выборка: {num_of_vec} Функция обучена правильно!\n {out}")
         plt.plot(sumError, 'ro-')
@@ -60,6 +64,7 @@ def training_mode(num_of_vec):
         print(f"Ошибка при обучении!\n")
         return -1
 
+# Записываем значения для тестовой функции
 def test_function(c, u):
     X = ''
 
@@ -71,6 +76,7 @@ def test_function(c, u):
 
     return X
 
+# Записываем значения для таблицы истинности
 def initialize_full():
     n = 4
     X = []
@@ -91,6 +97,7 @@ def initialize():
 
     return X
 
+# Строим нашу целевую функцию с помощью формул
 def function_init(x):
     F = int(x[0] and x[1] or x[2] or x[3])
     return F
