@@ -44,21 +44,16 @@ class NeuronHopfield:
                     self.w[i][j] += x[i] * x[j]
 
     def net(self, x):
-        iters = 1
-        while(self.shapes.count(x) == 0):
-            self.current_iter += 1
-            for i in range(self.n):
-                net_y = sum(self.w[j][i] * x[j] for j in range(self.n))
-                y = function_activation(net_y, x[i])
-                if y != x[i] and y != 0:
-                    print(f"Neuron {i} : {x[i]} -> {y}")
-                    x[i] = y
-                if (self.current_iter >= self.max_iter):
-                    return (f"False. Number of iteration exceeded the allowed value {iters}", x)
+        for i in range(self.n):
+            net_y = sum([self.w[j][i] * x[j] for j in range(self.n)])
+            y = function_activation(net_y, x[i])
+            if y != x[i] and y != 0:
+                print(f"Neuron {i} : {x[i]} -> {y}")
+                x[i] = y
+            if x not in self.shapes:
+                return (f"False ", x)
 
-            iters += 1
-
-        return (f"Success. Training completed in {iters} iterations", x)
+        return (f"Success. Training completed in iterations", x)
 
     def parse(self, directory):
         shapes_files = []
