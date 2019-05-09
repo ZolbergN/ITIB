@@ -18,7 +18,7 @@ def function_activation(net, y):
     if net > 0:
         return 1
     elif net == 0:
-        return y
+        return 0
     else:
         return -1
 
@@ -50,8 +50,9 @@ class NeuronHopfield:
             if y != x[i] and y != 0:
                 print(f"Neuron {i} : {x[i]} -> {y}")
                 x[i] = y
-            if x not in self.shapes:
-                return (f"False ", x)
+
+        if x not in self.shapes:
+            return (f"False ", x)
 
         return (f"Success. Training completed in iterations", x)
 
@@ -99,6 +100,8 @@ if __name__ == '__main__':
     print("Teaching...")
     for o in shapes:
         n.training_mode(o)
+
+    print(n.w)
 
     print("Modified shape:")
     n.printshape(shape, SIDE_HEIGHT, SIDE_WIDTH)
