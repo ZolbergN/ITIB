@@ -24,14 +24,11 @@ def function_activation(net, y):
 
 class NeuronHopfield:
     def __init__(self, height, width):
-        self.drawsteps = False
         self.shapes = []
         self.n = height * width
         self.height = height
         self.width = width
         self.w = np.array([np.zeros(self.n) for _ in range(self.n)])
-        self.max_iter = 300
-        self.current_iter = 0
 
     def training_mode(self, x):
         self.shapes.append(x)
